@@ -14,10 +14,10 @@ options(scipen=999)
 
 ```{r}
 # Load data
-head(flights)
+# head(flights)
 flights_df <- flights
-glimpse(flights_df)
-?flights
+# glimpse(flights_df)
+# ?flights
 ```
 
 
@@ -28,80 +28,80 @@ glimpse(flights_df)
 # Question 1: In a single pipeline for each condition, find all flights that meet the condition:
 
 # Had an arrival delay of two or more hours
-arrival_delay_two_or_more_hours <-  flights_df |>
+(arrival_delay_two_or_more_hours <-  flights_df |>
                                       filter(arr_delay >= 120) |> 
-                                      select(flight) 
+                                      select(flight)) 
 # Flew to Houston (IAH or HOU)
-flew_to_houston <- flights_df |>
+(flew_to_houston <- flights_df |>
                      filter(dest %in% c("IAH", "HOU"))  |> 
-                     select(flight) 
+                     select(flight) )
 # Were operated by United, American, or Delta
-operated_by_united_aa_delta <- flights_df |>
+(operated_by_united_aa_delta <- flights_df |>
                                  filter(carrier %in% c("UA", "AA", "DL"))  |> 
-                                 select(flight) 
+                                 select(flight)) 
 # Departed in summer (July, August, and September)
-departed_in_summer <- flights_df |>
+(departed_in_summer <- flights_df |>
                         filter(month %in% c(7, 8, 9)) |> 
-                        select(flight) 
+                        select(flight)) 
 
 # Arrived more than two hours late but didn’t leave late
-arrived_2hrs_late_no_dep_delay <- flights_df |>
+(arrived_2hrs_late_no_dep_delay <- flights_df |>
                                     filter(arr_delay > 120, dep_delay <= 0 ) |> 
-                                    select(flight) 
+                                    select(flight)) 
 # Were delayed by at least an hour, but made up over 30 minutes in flight
-delayed_1hr_madeup_30min <- flights_df |>
+(delayed_1hr_madeup_30min <- flights_df |>
                               filter(dep_delay >= 60, dep_delay - arr_delay > 30 ) |> 
-                              select(flight) 
+                              select(flight)) 
 ```
 ### Question 2: Sort flights to find the flights with the longest departure delays. Find the flights that left earliest in the morning.
 
 ```{r}
 # Sorting flights by the longest departure delays (top 6)
-longest_dep_delays <- flights_df |> 
+(longest_dep_delays <- flights_df |> 
                        arrange(desc(dep_delay)) |> 
-                       head()
+                       head())
 # Flights that left earliest in the morning
-flights_with_earliest_departure <- flights_df |> 
+(flights_with_earliest_departure <- flights_df |> 
                                      arrange(dep_time) |> 
-                                     head()
+                                     head())
                                      
 ```
 
 ### Question 3: Sort flights to find the fastest flights
 ```{r}
-fastest_flights <- flights_df |> 
+(fastest_flights <- flights_df |> 
                      mutate(speed = distance / air_time) |>
                      arrange(desc(speed)) |> 
-                     head()
+                     head())
 ```
 
 
 ### Question 4: Was there a flight on every day of 2013?
 ```{r}
 # Get number of unique days in dataset
-num_unique_days <- flights_df %>%
+(num_unique_days <- flights_df %>%
   distinct(month, day) %>%
-  nrow() 
+  nrow()) 
 
 # Assert number of unique days is equal to total number of days in the year 2013
 total_days_year_2013 <- 365
-num_unique_days == total_days_year_2013
+(num_unique_days == total_days_year_2013)
 
 ```
 ### Question 5: Which flights traveled the farthest distance? Which traveled the least distance?
 
 ```{r}
 # Flight with farthest distance
-flight_with_max_distance <- flights_df |> 
+(flight_with_max_distance <- flights_df |> 
                               arrange(desc(distance)) |> 
                               head(1) |> 
-                              pull(flight)
+                              pull(flight))
 
 # Flight with least distance
-flight_with_min_distance <- flights_df |> 
+(flight_with_min_distance <- flights_df |> 
                               arrange(distance) |> 
                               head(1) |> 
-                              pull(flight)
+                              pull(flight))
 ```
 
 ### Question 6: Does it matter what order you used filter() and arrange() if you’re using both? Why/why not? Think about the results and how much work the functions would have to do.
@@ -161,7 +161,7 @@ The any_of() function prevents your code from failing if some columns in the sel
 
 ```{r}
 flights_df |> select(contains("TImE"))
-?contains
+
 ```
 
 The code suprisingly worked, I was expecting the function to be case sensitive, but seems contains() function was not case-sensitive by default. To change default, set the "ignore.case"
@@ -179,9 +179,9 @@ flights_df |>
 ### Question 7: Why doesn’t the following work, and what does the error mean?
 
 ```{r}
-flights |> 
-  select(tailnum) |> 
-  arrange(arr_delay)
+# flights_df |> 
+  # select(tailnum) |> 
+  # arrange(arr_delay)
 ```
 
 The issue with the code is that only the "tailnum" column was selected  and it attempted to arrange by "arr_delay", which no longer exists in the dataset after the select() step.
@@ -193,21 +193,21 @@ The issue with the code is that only the "tailnum" column was selected  and it a
 
 ```{r}
 # Carrier with the worst average delays
-worst_carrier_by_avg_delay <- flights_df |>
+(worst_carrier_by_avg_delay <- flights_df |>
                                 filter(dep_delay > 0) |> 
                                 group_by(carrier) |> 
                                 summarise(avg_delay = mean(dep_delay, na.rm = T)) |> 
                                 arrange(desc(avg_delay)) |> 
                                 head(1) |> 
-                                pull(carrier)
+                                pull(carrier))
 
 #  bad airports vs. bad carriers
-carrier_dest_delay <- flights_df |> 
+(carrier_dest_delay <- flights_df |> 
                         filter(dep_delay > 0) |> 
                         group_by(carrier, dest) |> 
                         summarise(no_delay_flights = n()) |> 
                         arrange(desc(no_delay_flights)) |> 
-                        head(1) 
+                        head(1)) 
 
 
 ```
@@ -217,10 +217,10 @@ carrier_dest_delay <- flights_df |>
 ### Question 2: Find the flights that are most delayed upon departure from each destination
 
 ```{r}
-most_departure_delayed_flights_by_dest <- flights_df |> 
+(most_departure_delayed_flights_by_dest <- flights_df |> 
                                             group_by(dest) |>
                                             slice_max(dep_delay) |> 
-                                            pull(flight)
+                                            pull(flight))
 ```
 
 
