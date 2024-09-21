@@ -1,5 +1,5 @@
 ---
-title: "CHAPTER THREE"
+title: "R FOR DATA SCIENCE: SOLUTIONS TO CHAPTER THREE EXCERCISES"
 author: "Olaoluwa Gbotoso"
 format: html
 editor: visual
