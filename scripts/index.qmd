@@ -236,7 +236,7 @@ average_hourly_delays_df <- flights_df |>
                               group_by(flight_hour) |> 
                               summarize(avg_dep_delay = mean(dep_delay, na.rm = TRUE))
 
-#Plot the data
+# Plot the data using ggplot
 ggplot(average_hourly_delays_df, aes(x = flight_hour, y = avg_dep_delay)) +
   geom_line(color = "blue", size = 1) + 
   labs(title = "Average Departure Delay by Hour of the Day",
