@@ -1,0 +1,344 @@
+---
+title: "R FOR DATA SCIENCE: SOLUTIONS TO CHAPTER THREE EXCERCISES"
+author: "Olaoluwa Gbotoso"
+format: html
+editor: visual
+---
+
+```{r}
+# Load the required library
+if(!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, nycflights13)
+options(scipen=999)
+```
+
+```{r}
+# Load data
+# head(flights)
+flights_df <- flights
+# glimpse(flights_df)
+# ?flights
+```
+
+
+## 3.2.5 Exercises
+### Question 1
+
+```{r}
+# Question 1: In a single pipeline for each condition, find all flights that meet the condition:
+
+# Had an arrival delay of two or more hours
+(arrival_delay_two_or_more_hours <-  flights_df |>
+                                      filter(arr_delay >= 120) |> 
+                                      select(flight)) 
+# Flew to Houston (IAH or HOU)
+(flew_to_houston <- flights_df |>
+                     filter(dest %in% c("IAH", "HOU"))  |> 
+                     select(flight) )
+# Were operated by United, American, or Delta
+(operated_by_united_aa_delta <- flights_df |>
+                                 filter(carrier %in% c("UA", "AA", "DL"))  |> 
+                                 select(flight)) 
+# Departed in summer (July, August, and September)
+(departed_in_summer <- flights_df |>
+                        filter(month %in% c(7, 8, 9)) |> 
+                        select(flight)) 
+
+# Arrived more than two hours late but didn’t leave late
+(arrived_2hrs_late_no_dep_delay <- flights_df |>
+                                    filter(arr_delay > 120, dep_delay <= 0 ) |> 
+                                    select(flight)) 
+# Were delayed by at least an hour, but made up over 30 minutes in flight
+(delayed_1hr_madeup_30min <- flights_df |>
+                              filter(dep_delay >= 60, dep_delay - arr_delay > 30 ) |> 
+                              select(flight)) 
+```
+### Question 2: Sort flights to find the flights with the longest departure delays. Find the flights that left earliest in the morning.
+
+```{r}
+# Sorting flights by the longest departure delays (top 6)
+(longest_dep_delays <- flights_df |> 
+                       arrange(desc(dep_delay)) |> 
+                       head())
+# Flights that left earliest in the morning
+(flights_with_earliest_departure <- flights_df |> 
+                                     arrange(dep_time) |> 
+                                     head())
+                                     
+```
+
+### Question 3: Sort flights to find the fastest flights
+```{r}
+(fastest_flights <- flights_df |> 
+                     mutate(speed = distance / air_time) |>
+                     arrange(desc(speed)) |> 
+                     head())
+```
+
+
+### Question 4: Was there a flight on every day of 2013?
+```{r}
+# Get number of unique days in dataset
+(num_unique_days <- flights_df %>%
+  distinct(month, day) %>%
+  nrow()) 
+
+# Assert number of unique days is equal to total number of days in the year 2013
+total_days_year_2013 <- 365
+(num_unique_days == total_days_year_2013)
+
+```
+### Question 5: Which flights traveled the farthest distance? Which traveled the least distance?
+
+```{r}
+# Flight with farthest distance
+(flight_with_max_distance <- flights_df |> 
+                              arrange(desc(distance)) |> 
+                              head(1) |> 
+                              pull(flight))
+
+# Flight with least distance
+(flight_with_min_distance <- flights_df |> 
+                              arrange(distance) |> 
+                              head(1) |> 
+                              pull(flight))
+```
+
+### Question 6: Does it matter what order you used filter() and arrange() if you’re using both? Why/why not? Think about the results and how much work the functions would have to do.
+
+The order of filter() and arrange() matters in terms of efficiency, but not in terms of the final results. If you filter first, the dataset is reduced before sorting, making it more efficient because fewer rows are being arranged. On the other hand, arranging first sorts the entire dataset, even though some rows may later be filtered out, resulting in unnecessary work.
+
+For better performance, especially with large datasets, it's recommended to filter first and then arrange, as this reduces the number of rows that need to be sorted. The final output will be the same regardless of the order, but filtering first optimizes the process.
+
+
+
+
+## 3.3.5 Exercises
+### Question 1: Compare dep_time, sched_dep_time, and dep_delay. How would you expect those three numbers to be related?
+
+```{r}
+flights_df |> 
+  select(dep_time, sched_dep_time, dep_delay) |> 
+  head()
+```
+
+The variable "dep_delay" is the difference between variables "dep_time" and "sched_dep_time" 
+
+
+### Question 2: Brainstorm as many ways as possible to select dep_time, dep_delay, arr_time, and arr_delay from flights.
+
+```{r}
+flights_df |> 
+  select(dep_time, dep_delay, arr_time, arr_delay) |> 
+  head()
+
+flights_df |> 
+  select(starts_with(c("dep", "arr"))) |> 
+  head()
+
+
+```
+
+### Question 3: What happens if you specify the name of the same variable multiple times in a select() call?
+
+```{r}
+flights_df |> 
+  select(dep_time, dep_delay, arr_time, arr_delay, dep_time,dep_time,dep_time) |> 
+  head()
+
+```
+The variable will only appear once in the resulting dataframe, based on its original position in the dataset or as ordered in the select() call
+
+
+### Question 4: What does the any_of() function do? Why might it be helpful in conjunction with this vector?
+
+variables <- c("year", "month", "day", "dep_delay", "arr_delay")
+
+The any_of() function prevents your code from failing if some columns in the selection vector are missing from the dataset. Instead of throwing an error, it simply ignores the absent columns. This is particularly useful when working with datasets where you can't guarantee the presence of all the columns in your selection.
+
+
+### Question 5: Does the result of running the following code surprise you? How do the select helpers deal with upper and lower case by default? How can you change that default?
+
+```{r}
+flights_df |> select(contains("TImE"))
+
+```
+
+The code suprisingly worked, I was expecting the function to be case sensitive, but seems contains() function was not case-sensitive by default. To change default, set the "ignore.case"
+argument to FALSE
+
+
+### Question 6: Rename air_time to air_time_min to indicate units of measurement and move it to the beginning of the data frame.
+
+```{r}
+flights_df |> 
+  rename(air_time_min = air_time) |> 
+  relocate(air_time_min)
+```
+
+### Question 7: Why doesn’t the following work, and what does the error mean?
+
+```{r}
+# flights_df |> 
+  # select(tailnum) |> 
+  # arrange(arr_delay)
+```
+
+The issue with the code is that only the "tailnum" column was selected  and it attempted to arrange by "arr_delay", which no longer exists in the dataset after the select() step.
+
+
+## Excercises 3.5.7
+
+### Question 1: Which carrier has the worst average delays? Challenge: can you disentangle the effects of bad airports vs. bad carriers? Why/why not? (Hint: think about flights |> group_by(carrier, dest) |> summarize(n()))
+
+```{r}
+# Carrier with the worst average delays
+(worst_carrier_by_avg_delay <- flights_df |>
+                                filter(dep_delay > 0) |> 
+                                group_by(carrier) |> 
+                                summarise(avg_delay = mean(dep_delay, na.rm = T)) |> 
+                                arrange(desc(avg_delay)) |> 
+                                head(1) |> 
+                                pull(carrier))
+
+#  bad airports vs. bad carriers
+(carrier_dest_delay <- flights_df |> 
+                        filter(dep_delay > 0) |> 
+                        group_by(carrier, dest) |> 
+                        summarise(no_delay_flights = n()) |> 
+                        arrange(desc(no_delay_flights)) |> 
+                        head(1)) 
+
+
+```
+
+
+
+### Question 2: Find the flights that are most delayed upon departure from each destination
+
+```{r}
+(most_departure_delayed_flights_by_dest <- flights_df |> 
+                                            group_by(dest) |>
+                                            slice_max(dep_delay) |> 
+                                            pull(flight))
+```
+
+
+
+
+### Question 3: How do delays vary over the course of the day? Illustrate your answer with a plot.
+
+
+```{r}
+# Extract hour from time_hour column and get average delay per hour
+average_hourly_delays_df <- flights_df |> 
+                              mutate(flight_hour = hour(time_hour)) |> 
+                              group_by(flight_hour) |> 
+                              summarize(avg_dep_delay = mean(dep_delay, na.rm = TRUE))
+
+#Plot the data
+ggplot(average_hourly_delays_df, aes(x = flight_hour, y = avg_dep_delay)) +
+  geom_line(color = "blue", size = 1) + 
+  labs(title = "Average Departure Delay by Hour of the Day",
+       x = "Hour of the Day",
+       y = "Average Departure Delay (minutes)") +
+  theme_minimal()
+
+```
+
+### Question 4: What happens if you supply a negative n to slice_min() and friends?
+```{r}
+# It selects ranked n values if positive and leaves them out if negative
+```
+
+
+### Question 5: Explain what count() does in terms of the dplyr verbs you just learned. What does the sort argument to count() do?
+
+
+```{r}
+# count() groups the data by in the column and counts how many rows there are for each group.
+
+# count() with the sort argument allows the results by the counts (the n column) to be sorted in descending order. If sort = TRUE, the groups with the highest counts will appear first. Default is FALSE
+```
+
+
+
+### Question 6:
+
+```{r}
+df <- tibble(
+  x = 1:5,
+  y = c("a", "b", "a", "a", "b"),
+  z = c("K", "K", "L", "L", "K")
+)
+
+# 
+```
+
+
+#### Question 6a: Write down what you think the output will look like, then check if you were correct, and describe what group_by() does.
+```{r}
+df |>
+  group_by(y)
+# Dataframe appears unchange, but has been grouped based on the unique values in the y column. This will be indicated on the heading
+```
+
+#### Question 6b: Write down what you think the output will look like, then check if you were correct, and describe what arrange() does. Also, comment on how it’s different from the group_by() in part (a).
+
+
+```{r}
+df |> 
+  arrange(y)
+
+# It sort the dataframe in ascending order by the values of column y. It's different from group_by() because the sorting is seeing in the output
+```
+
+#### Question 6c: Write down what you think the output will look like, then check if you were correct, and describe what the pipeline does.
+
+
+```{r}
+df |>
+  group_by(y) |>
+  summarize(mean_x = mean(x))
+# The pipeline makes the dataframe available to be used in each pipeline without stating it in the code for that line
+```
+
+#### Question 6d: Write down what you think the output will look like, then check if you were correct, and describe what the pipeline does. Then, comment on what the message says.
+
+
+  
+```{r}
+df |>
+  group_by(y, z) |>
+  summarize(mean_x = mean(x))
+```
+  
+
+#### Question 6e: Write down what you think the output will look like, then check if you were correct, and describe what the pipeline does. How is the output different from the one in part (d)?
+
+
+  
+```{r}
+df |>
+  group_by(y, z) |>
+  summarize(mean_x = mean(x), .groups = "drop")
+# This removes the grouping after the summarization, so the result is an ungrouped tibble. unlike question 6d where the grouping of last column is dropped leaving the result to be only grouped by y (default for .groups is "drop_last")
+```
+  
+#### Question 6f: Write down what you think the outputs will look like, then check if you were correct, and describe what each pipeline does. How are the outputs of the two pipelines different?
+
+
+  
+```{r}
+df |>
+  group_by(y, z) |>
+  summarize(mean_x = mean(x))
+
+df |>
+  group_by(y, z) |>
+  mutate(mean_x = mean(x))
+
+# The summarize() function reduces data to one row per group with group-level statistics, while mutate() retains all rows and adds computed values for each group without changing the number of rows.
+```
+  
+  
